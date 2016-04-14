@@ -1,5 +1,6 @@
 package com.alibaba.rocketmq.storm.spout;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -97,11 +98,18 @@ public class StreamMessageSpout extends BatchMessageSpout {
     public void nextTuple() {
         MessageCacheItem cacheItem = msgQueue.poll();
         if (cacheItem != null) {
-            Values values = new Values(cacheItem.getMsg(), cacheItem.getMsgStat());
+            Values values = null;
             String messageId = cacheItem.getMsg().getMsgId();
+            try {
+                values = new Values(new String(cacheItem.getMsg().getBody(),"utf-8"), cacheItem.getMsgStat());
+            } catch (UnsupportedEncodingException e) {
+                LOG.info("Encoding exception tuple body {},mssageId is {} !", values, messageId);
+                e.printStackTrace();
+            }
+
             collector.emit(values, messageId);
 
-            LOG.debug("Emited tuple {},mssageId is {} !", values, messageId);
+            LOG.debug("Emitted tuple {},mssageId is {} !", values, messageId);
             return;
         }
 
@@ -176,7 +184,7 @@ public class StreamMessageSpout extends BatchMessageSpout {
     }
 
     public void declareOutputFields(final OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("MessageExt"));
+        declarer.declare(new Fields("MessageExt","MessageId"));
     }
 
     public static class BatchMsgsTag {

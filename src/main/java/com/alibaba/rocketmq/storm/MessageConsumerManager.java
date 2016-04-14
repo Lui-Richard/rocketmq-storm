@@ -22,20 +22,24 @@ public class MessageConsumerManager {
 
     private static final Logger          LOG = LoggerFactory
                                                      .getLogger(MessageConsumerManager.class);
-    private static DefaultMQPushConsumer pushConsumer;
-    private static DefaultMQPullConsumer pullConsumer;
+
 
     MessageConsumerManager() {
     }
 
     public static MQConsumer getConsumerInstance(RocketMQConfig config, MessageListener listener,
                                                  Boolean isPushlet) throws MQClientException {
+        DefaultMQPushConsumer pushConsumer;
+        DefaultMQPullConsumer pullConsumer;
+
         LOG.info("Begin to init consumer,instanceName->{},configuration->{}",
                 new Object[] { config.getInstanceName(), config });
 
         if (BooleanUtils.isTrue(isPushlet)) {
             pushConsumer = (DefaultMQPushConsumer) FastBeanUtils.copyProperties(config,
                     DefaultMQPushConsumer.class);
+
+            pushConsumer.setNamesrvAddr(config.getNamesrvAddr());
             pushConsumer.setConsumerGroup(config.getGroupId());
             pushConsumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_LAST_OFFSET);
 

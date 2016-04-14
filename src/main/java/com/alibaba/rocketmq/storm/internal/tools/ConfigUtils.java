@@ -23,6 +23,10 @@ public abstract class ConfigUtils {
      * configuration ({@code "rocketmq.config"}).
      */
     public static final String CONFIG_FILE                   = "rocketmq.config";
+
+
+    public static final String CONFIG_NAMESRVADDR      = "rocketmq.spout.server.addr";
+
     /**
      * Storm configuration key used to determine the rocketmq topic to read from
      * ( {@code "rocketmq.spout.topic"}).
@@ -89,11 +93,16 @@ public abstract class ConfigUtils {
             config.put((String) entry.getKey(), entry.getValue());
         }
         //2.
+
+        //CONFIG_NAMESRVADDR
+
+        String namesrvAddr =  (String) config.get(ConfigUtils.CONFIG_NAMESRVADDR);
         String topic = (String) config.get(ConfigUtils.CONFIG_TOPIC);
         String consumerGroup = (String) config.get(ConfigUtils.CONFIG_CONSUMER_GROUP);
         String topicTag = (String) config.get(ConfigUtils.CONFIG_TOPIC_TAG);
-        Integer pullBatchSize = (Integer) config.get(ConfigUtils.CONFIG_PREFETCH_SIZE);
-        RocketMQConfig mqConfig = new RocketMQConfig(consumerGroup, topic, topicTag);
+        Integer pullBatchSize = 2; //(Integer) config.get(ConfigUtils.CONFIG_PREFETCH_SIZE);
+        RocketMQConfig mqConfig = new RocketMQConfig(namesrvAddr,
+                consumerGroup, topic, topicTag);
 
         if (pullBatchSize != null && pullBatchSize > 0) {
             mqConfig.setPullBatchSize(pullBatchSize);

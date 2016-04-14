@@ -1,5 +1,7 @@
 package com.alibaba.rocketmq.storm.spout;
 
+import java.io.UnsupportedEncodingException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -7,6 +9,7 @@ import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.apache.storm.guava.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,6 +67,7 @@ public class BatchMessageSpout implements IRichSpout {
 
         this.topologyName = (String) conf.get(Config.TOPOLOGY_NAME);
 
+
         if (mqClient == null) {
             try {
                 config.setInstanceName(String.valueOf(context.getThisTaskId()));
@@ -92,7 +96,13 @@ public class BatchMessageSpout implements IRichSpout {
         }
 
         UUID uuid = msg.getBatchId();
-        collector.emit(new Values(msg.getMsgList()), uuid);
+
+        List<MessageExt> msgList = msg.getMsgList();
+
+        List<String> msgBodyList = getMessageBody(msgList);
+
+
+        collector.emit(new Values(msgBodyList), uuid);
     }
 
     public BatchMessage finish(UUID batchId) {
@@ -144,7 +154,7 @@ public class BatchMessageSpout implements IRichSpout {
     }
 
     public void declareOutputFields(final OutputFieldsDeclarer declarer) {
-        declarer.declare(new Fields("MessageExtList"));
+        declarer.declare(new Fields("MessageExtList","MessageId"));
     }
 
     public boolean isDistributed() {
@@ -215,7 +225,7 @@ public class BatchMessageSpout implements IRichSpout {
     }
 
     public boolean consumeMessage(List<MessageExt> msgs, MessageQueue mq) {
-        LOG.info("Receiving {} messages {} from MQ {} !", new Object[] { msgs.size(), msgs, mq });
+        LOG.debug("Receiving {} messages {} from MQ {} !", new Object[] { msgs.size(), msgs, mq });
 
         if (msgs == null || msgs.isEmpty()) {
             return true;
@@ -239,6 +249,30 @@ public class BatchMessageSpout implements IRichSpout {
         }
 
         return batchMsgs.isSuccess();
+    }
+
+    /**
+     * parse message body.
+     * @param msgs
+     * @return
+     */
+    public List<String> getMessageBody(List<MessageExt> msgs){
+        List<String> messageBodyList = Lists.newArrayList();
+        Iterator<MessageExt> it = msgs.iterator();
+        while (it.hasNext()){
+            MessageExt msg = it.next();
+            try {
+//                System.out.println(Thread.currentThread().getName() + " Receive New Messages,topic:" + msg.getTopic()
+//                        +",message body:"+new String(msg.getBody(),"utf-8"));
+                messageBodyList.add(new String(msg.getBody(),"utf-8"));
+
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+        return messageBodyList;
     }
 
 }

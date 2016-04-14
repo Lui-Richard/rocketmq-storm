@@ -12,6 +12,10 @@ public class RocketMQConfig implements Serializable {
     private static final long serialVersionUID              = 4157424979688590880L;
 
     /**
+     * MQ server
+     */
+    private String             namesrvAddr ;
+    /**
      * Unique mark for every JVM instance
      */
     private String            instanceName;
@@ -69,8 +73,10 @@ public class RocketMQConfig implements Serializable {
     public RocketMQConfig() {
     }
 
-    public RocketMQConfig(String consumerGroup, String topic, String topicTag) {
+    public RocketMQConfig(String namesrvAddr,
+                          String consumerGroup, String topic, String topicTag) {
         super();
+        this.namesrvAddr = namesrvAddr;
         this.groupId = consumerGroup;
         this.topic = topic;
         this.topicTag = topicTag;
@@ -257,6 +263,14 @@ public class RocketMQConfig implements Serializable {
      */
     public void setMaxFailTimes(int maxFailTimes) {
         this.maxFailTimes = maxFailTimes;
+    }
+
+    public String getNamesrvAddr() {
+        return namesrvAddr;
+    }
+
+    public void setNamesrvAddr(String namesrvAddr) {
+        this.namesrvAddr = namesrvAddr;
     }
 
     @Override

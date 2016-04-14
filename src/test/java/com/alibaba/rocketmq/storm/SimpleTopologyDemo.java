@@ -48,7 +48,7 @@ public class SimpleTopologyDemo {
         BoltDeclarer writerBolt = builder.setBolt(BOLT_NAME, new RocketMqBolt(), boltParallel);
 
         SimpleMessageSpout defaultSpout = (SimpleMessageSpout) RocketMQSpoutFactory
-                .getSpout(RocketMQSpouts.SIMPLE.getValue());
+                .getSpout(RocketMQSpouts.SIMPLE.getValue(),"simpleKey");
         RocketMQConfig mqConig = (RocketMQConfig) config.get(ConfigUtils.CONFIG_ROCKETMQ);
         defaultSpout.setConfig(mqConig);
 

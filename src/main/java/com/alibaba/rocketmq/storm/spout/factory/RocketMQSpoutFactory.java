@@ -19,34 +19,35 @@ public final class RocketMQSpoutFactory {
     private static final Logger              logger         = LoggerFactory
                                                                     .getLogger(RocketMQSpoutFactory.class);
 
-    private static IRichSpout                spout;
-
     private static Cache<String, IRichSpout> cache          = CacheBuilder.newBuilder().build();
 
     private static final String              DEFAULT_BROKER = RocketMQSpouts.STREAM.getValue();
 
-    public static IRichSpout getSpout(String spoutName) {
+    //get spout by key
+    public static IRichSpout getSpout(String spoutName,String key) {
         RocketMQSpouts spoutType = RocketMQSpouts.fromString(spoutName);
         switch (spoutType) {
             case SIMPLE:
             case BATCH:
             case STREAM:
-                return locateSpout(spoutName);
+                return locateSpout(spoutName,key);
             default:
                 logger.warn("Can not support this spout type {} temporarily !", spoutName);
-                return locateSpout(DEFAULT_BROKER);
+                return locateSpout(DEFAULT_BROKER,"defaultKey");
 
         }
     }
 
-    private static IRichSpout locateSpout(String spoutName) {
-        spout = cache.getIfPresent(spoutName);
+    private static IRichSpout locateSpout(String spoutName,String key) {
+        IRichSpout  spout;
+
+        spout = cache.getIfPresent(key);
         if (null == spout) {
             for (IRichSpout spoutInstance : ServiceLoader.load(IRichSpout.class)) {
                 Extension ext = spoutInstance.getClass().getAnnotation(Extension.class);
                 if (spoutName.equals(ext.value())) {
                     spout = spoutInstance;
-                    cache.put(spoutName, spoutInstance);
+                    cache.put(key, spoutInstance);
                     return spoutInstance;
                 }
             }
